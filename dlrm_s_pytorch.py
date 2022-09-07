@@ -112,12 +112,14 @@ exc = getattr(builtins, "IOError", "FileNotFoundError")
 
 
 def time_wrap(use_gpu):
+    print('dlrm_s_pytorch.py/time_wrap')
     if use_gpu:
         torch.cuda.synchronize()
     return time.time()
 
 
 def dlrm_wrap(X, lS_o, lS_i, use_gpu, device, ndevices=1):
+    print('dlrm_s_pytorch.py/dlrm_wrap')
     with record_function("DLRM forward"):
         if use_gpu:  # .cuda()
             # lS_i can be either a list of tensors or a stacked tensor.
@@ -137,6 +139,7 @@ def dlrm_wrap(X, lS_o, lS_i, use_gpu, device, ndevices=1):
 
 
 def loss_fn_wrap(Z, T, use_gpu, device):
+    print('dlrm_s_pytorch.py/loss_fn_wrap')
     with record_function("DLRM loss compute"):
         if args.loss_function == "mse" or args.loss_function == "bce":
             return dlrm.loss_fn(Z, T.to(device))
@@ -150,12 +153,14 @@ def loss_fn_wrap(Z, T, use_gpu, device):
 # The following function is a wrapper to avoid checking this multiple times in th
 # loop below.
 def unpack_batch(b):
+    print('dlrm_s_pytorch.py/unpack_batch')
     # Experiment with unweighted samples
     return b[0], b[1], b[2], b[3], torch.ones(b[3].size()), None
 
 
 class LRPolicyScheduler(_LRScheduler):
     def __init__(self, optimizer, num_warmup_steps, decay_start_step, num_decay_steps):
+        print('dlrm_s_pytorch.py/LRPolicySchedulerClass/__init__')
         self.num_warmup_steps = num_warmup_steps
         self.decay_start_step = decay_start_step
         self.decay_end_step = decay_start_step + num_decay_steps
@@ -167,6 +172,7 @@ class LRPolicyScheduler(_LRScheduler):
         super(LRPolicyScheduler, self).__init__(optimizer)
 
     def get_lr(self):
+        print('dlrm_s_pytorch.py/LRPolicySchedulerClass/get_lr')
         step_count = self._step_count
         if step_count < self.num_warmup_steps:
             # warmup
@@ -194,6 +200,7 @@ class LRPolicyScheduler(_LRScheduler):
 ### define dlrm in PyTorch ###
 class DLRM_Net(nn.Module):
     def create_mlp(self, ln, sigmoid_layer):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/create_mlp')
         # build MLP layer by layer
         layers = nn.ModuleList()
         for i in range(0, ln.size - 1):
@@ -234,6 +241,7 @@ class DLRM_Net(nn.Module):
         return torch.nn.Sequential(*layers)
 
     def create_emb(self, m, ln, weighted_pooling=None):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/create_emb')
         emb_l = nn.ModuleList()
         v_W_l = []
         for i in range(0, ln.size):
@@ -303,6 +311,7 @@ class DLRM_Net(nn.Module):
         weighted_pooling=None,
         loss_function="bce"
     ):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/__init__')
         super(DLRM_Net, self).__init__()
 
         if (
@@ -386,6 +395,7 @@ class DLRM_Net(nn.Module):
                 )
 
     def apply_mlp(self, x, layers):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/apply_mlp')
         # approach 1: use ModuleList
         # for layer in layers:
         #     x = layer(x)
@@ -394,6 +404,7 @@ class DLRM_Net(nn.Module):
         return layers(x)
 
     def apply_emb(self, lS_o, lS_i, emb_l, v_W_l):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/apply_emb')
         # WARNING: notice that we are processing the batch at once. We implicitly
         # assume that the data is laid out such that:
         # 1. each embedding is indexed with a group of sparse indices,
@@ -452,7 +463,7 @@ class DLRM_Net(nn.Module):
 
     #  using quantizing functions from caffe2/aten/src/ATen/native/quantized/cpu
     def quantize_embedding(self, bits):
-
+        print('dlrm_s_pytorch.py/DLRM_NetClass/quantize_embedding')
         n = len(self.emb_l)
         self.emb_l_q = [None] * n
         for k in range(n):
@@ -471,7 +482,7 @@ class DLRM_Net(nn.Module):
         self.quantize_bits = bits
 
     def interact_features(self, x, ly):
-
+        print('dlrm_s_pytorch.py/DLRM_NetClass/interact_features')
         if self.arch_interaction_op == "dot":
             # concatenate dense and sparse features
             (batch_size, d) = x.shape
@@ -506,6 +517,7 @@ class DLRM_Net(nn.Module):
         return R
 
     def forward(self, dense_x, lS_o, lS_i):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/forward')
         if ext_dist.my_size > 1:
             # multi-node multi-device run
             return self.distributed_forward(dense_x, lS_o, lS_i)
@@ -517,6 +529,7 @@ class DLRM_Net(nn.Module):
             return self.parallel_forward(dense_x, lS_o, lS_i)
 
     def distributed_forward(self, dense_x, lS_o, lS_i):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/distributed_forward')
         batch_size = dense_x.size()[0]
         # WARNING: # of ranks must be <= batch size in distributed_forward call
         if batch_size < ext_dist.my_size:
@@ -576,6 +589,7 @@ class DLRM_Net(nn.Module):
         return z
 
     def sequential_forward(self, dense_x, lS_o, lS_i):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/sequential_forward')
         # process dense features (using bottom mlp), resulting in a row vector
         x = self.apply_mlp(dense_x, self.bot_l)
         # debug prints
@@ -603,6 +617,7 @@ class DLRM_Net(nn.Module):
         return z
 
     def parallel_forward(self, dense_x, lS_o, lS_i):
+        print('dlrm_s_pytorch.py/DLRM_NetClass/parallel_forward')
         ### prepare model (overwrite) ###
         # WARNING: # of devices must be >= batch size in parallel_forward call
         batch_size = dense_x.size()[0]
@@ -757,6 +772,7 @@ def inference(
     use_gpu,
     log_iter=-1,
 ):
+    print('dlrm_s_pytorch.py/inference')
     test_accu = 0
     test_samp = 0
 
@@ -891,6 +907,7 @@ def inference(
 
 
 def run():
+    print('dlrm_s_pytorch.py/run')
     ### parse arguments ###
     parser = argparse.ArgumentParser(
         description="Train Deep Learning Recommendation Model (DLRM)"
