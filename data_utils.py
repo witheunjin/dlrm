@@ -49,6 +49,7 @@ import numpy as np
 
 
 def convertUStringToDistinctIntsDict(mat, convertDicts, counts):
+    print('data_utils.py/convertStringToDistinctIntsDict')
     # Converts matrix of unicode strings into distinct integers.
     #
     # Inputs:
@@ -84,6 +85,7 @@ def convertUStringToDistinctIntsDict(mat, convertDicts, counts):
 
 
 def convertUStringToDistinctIntsUnique(mat, mat_uni, counts):
+    print('data_utils.py/convertUStringToDistinctIntsUnique')
     # mat is an array of 0,...,# samples, with each being 26 categorical features
 
     # check if mat_unique and counts match correct length of mat
@@ -110,6 +112,7 @@ def convertUStringToDistinctIntsUnique(mat, mat_uni, counts):
 
 
 def processCriteoAdData(d_path, d_file, npzfile, i, convertDicts, pre_comp_counts):
+    print('data_utils.py/processCriteoAdData')
     # Process Kaggle Display Advertising Challenge or Terabyte Dataset
     # by converting unicode strings in X_cat to integers and
     # converting negative integer values in X_int.
@@ -182,6 +185,7 @@ def concatCriteoAdData(
         memory_map,
         o_filename
 ):
+    print('data_utils.py/concatCriteoAdData')
     # Concatenates different days and saves the result.
     #
     # Inputs:
@@ -754,6 +758,7 @@ def concatCriteoAdData(
 
 
 def transformCriteoAdData(X_cat, X_int, y, days, data_split, randomize, total_per_file):
+    print('data_utils.py/transformCriteoAdData')
     # Transforms Criteo Kaggle or terabyte data by applying log transformation
     # on dense features and converting everything to appropriate tensors.
     #
@@ -885,6 +890,7 @@ def getCriteoAdData(
         memory_map=False,
         dataset_multiprocessing=False,
 ):
+    print('data_utils.py/getCriteoAdData')
     # Passes through entire dataset and defines dictionaries for categorical
     # features and determines the number of total categories.
     #
@@ -973,6 +979,7 @@ def getCriteoAdData(
             convertDictsDay=None,
             resultDay=None
     ):
+        print('data_utils.py/process_one_file')
         if dataset_multiprocessing:
             convertDicts_day = [{} for _ in range(26)]
 
@@ -1212,6 +1219,7 @@ def loadDataset(
         pro_data="",
         memory_map=False
 ):
+    print('data_utils.py/loadDataset')
     # dataset
     if dataset == "kaggle":
         days = 7
@@ -1263,6 +1271,7 @@ def loadDataset(
 
 
 if __name__ == "__main__":
+    print('data_utils.py')
     ### import packages ###
     import argparse
 
