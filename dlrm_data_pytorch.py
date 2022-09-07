@@ -61,6 +61,7 @@ class CriteoDataset(Dataset):
             memory_map=False,
             dataset_multiprocessing=False,
     ):
+        print('dlrm_data_pytorch.py/CriteoDatasetClass/__init__')
         # dataset
         # tar_fea = 1   # single target
         den_fea = 13  # 13 dense  features
@@ -261,7 +262,7 @@ class CriteoDataset(Dataset):
             print("Split data according to indices...")
 
     def __getitem__(self, index):
-
+        print('dlrm_data_pytorch.py/CriteoDatasetClass/__getitem__')
         if isinstance(index, slice):
             return [
                 self[idx] for idx in range(
@@ -300,6 +301,7 @@ class CriteoDataset(Dataset):
             return self.X_int[i], self.X_cat[i], self.y[i]
 
     def _default_preprocess(self, X_int, X_cat, y):
+        print('dlrm_data_pytorch.py/CriteoDatasetClass/_default_preprocess')
         X_int = torch.log(torch.tensor(X_int, dtype=torch.float) + 1)
         if self.max_ind_range > 0:
             X_cat = torch.tensor(X_cat % self.max_ind_range, dtype=torch.long)
@@ -310,6 +312,7 @@ class CriteoDataset(Dataset):
         return X_int, X_cat, y
 
     def __len__(self):
+        print('dlrm_data_pytorch.py/CriteoDatasetClass/__len__')
         if self.memory_map:
             if self.split == 'none':
                 return self.offset_per_file[-1]
@@ -326,6 +329,7 @@ class CriteoDataset(Dataset):
 
 
 def collate_wrapper_criteo_offset(list_of_tuples):
+    print('dlrm_data_pytorch.py/CriteoDatasetClass/collate_wrapper_criteo_offset')
     # where each tuple is (X_int, X_cat, y)
     transposed_data = list(zip(*list_of_tuples))
     X_int = torch.log(torch.tensor(transposed_data[0], dtype=torch.float) + 1)
@@ -342,6 +346,7 @@ def collate_wrapper_criteo_offset(list_of_tuples):
 
 
 def ensure_dataset_preprocessed(args, d_path):
+    print('dlrm_data_pytorch.py/CriteoDatasetClass/ensure_dataset_preprocessed')
     _ = CriteoDataset(
         args.data_set,
         args.max_ind_range,
@@ -385,6 +390,7 @@ def ensure_dataset_preprocessed(args, d_path):
 
 # Conversion from offset to length
 def offset_to_length_converter(lS_o, lS_i):
+    print('dlrm_data_pytorch.py/CriteoDatasetClass/offset_to_length_converter')
     def diff(tensor):
         return tensor[1:] - tensor[:-1]
 
@@ -397,6 +403,7 @@ def offset_to_length_converter(lS_o, lS_i):
 
 
 def collate_wrapper_criteo_length(list_of_tuples):
+    print('dlrm_data_pytorch.py/CriteoDatasetClass/collate_wrapper_criteo_length')
     # where each tuple is (X_int, X_cat, y)
     transposed_data = list(zip(*list_of_tuples))
     X_int = torch.log(torch.tensor(transposed_data[0], dtype=torch.float) + 1)
@@ -417,6 +424,7 @@ def collate_wrapper_criteo_length(list_of_tuples):
 
 
 def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
+    print('dlrm_data_pytorch.py/CriteoDatasetClass/make_criteo_data_and_loaders')
     if args.mlperf_logging and args.memory_map and args.data_set == "terabyte":
         # more efficient for larger batches
         data_directory = path.dirname(args.raw_data_file)
@@ -574,7 +582,7 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
 
 # uniform ditribution (input data)
 class RandomDataset(Dataset):
-
+    
     def __init__(
             self,
             m_den,
@@ -597,6 +605,7 @@ class RandomDataset(Dataset):
             rand_data_sigma=1,
             rand_seed=0
     ):
+        print('dlrm_data_pytorch.py/RandomDatasetClass/__init__')
         # compute batch size
         nbatches = int(np.ceil((data_size * 1.0) / mini_batch_size))
         if num_batches != 0:
@@ -630,7 +639,7 @@ class RandomDataset(Dataset):
         # torch.manual_seed(numpy_rand_seed)
 
     def __getitem__(self, index):
-
+        print('dlrm_data_pytorch.py/RandomDatasetClass/__getitem__')
         if isinstance(index, slice):
             return [
                 self[idx] for idx in range(
@@ -681,12 +690,14 @@ class RandomDataset(Dataset):
         return (X, lS_o, lS_i, T)
 
     def __len__(self):
+        print('dlrm_data_pytorch.py/RandomDatasetClass/__len__')
         # WARNING: note that we produce bacthes of outputs in __getitem__
         # therefore we should use num_batches rather than data_size below
         return self.num_batches
 
 
 def collate_wrapper_random_offset(list_of_tuples):
+    print('dlrm_data_pytorch.py/collate_wrapper_random_offset')
     # where each tuple is (X, lS_o, lS_i, T)
     (X, lS_o, lS_i, T) = list_of_tuples[0]
     return (X,
@@ -696,6 +707,7 @@ def collate_wrapper_random_offset(list_of_tuples):
 
 
 def collate_wrapper_random_length(list_of_tuples):
+    print('dlrm_data_pytorch.py/collate_wrapper_random_length')
     # where each tuple is (X, lS_o, lS_i, T)
     (X, lS_o, lS_i, T) = list_of_tuples[0]
     return (X,
@@ -707,7 +719,7 @@ def collate_wrapper_random_length(list_of_tuples):
 def make_random_data_and_loader(args, ln_emb, m_den,
     offset_to_length_converter=False,
 ):
-
+    print('dlrm_data_pytorch.py/make_random_data_and_loader')
     train_data = RandomDataset(
         m_den,
         ln_emb,
@@ -793,6 +805,7 @@ def generate_random_data(
     enable_padding=False,
     length=False, # length for caffe2 version (except dlrm_s_caffe2)
 ):
+    print('dlrm_data_pytorch.py/generate_random_data')
     nbatches = int(np.ceil((data_size * 1.0) / mini_batch_size))
     if num_batches != 0:
         nbatches = num_batches
@@ -846,6 +859,7 @@ def generate_random_data(
 
 
 def generate_random_output_batch(n, num_targets, round_targets=False):
+    print('dlrm_data_pytorch.py/generate_random_output_batch')
     # target (probability of a click)
     if round_targets:
         P = np.round(ra.rand(n, num_targets).astype(np.float32)).astype(np.float32)
@@ -864,6 +878,7 @@ def generate_uniform_input_batch(
     num_indices_per_lookup_fixed,
     length,
 ):
+    print('dlrm_data_pytorch.py/generate_uniform_input_batch')
     # dense feature
     Xt = torch.tensor(ra.rand(n, m_den).astype(np.float32))
 
@@ -918,6 +933,7 @@ def generate_dist_input_batch(
     rand_data_mu,
     rand_data_sigma,
 ):
+    print('dlrm_data_pytorch.py/generate_dist_input_batch')
     # dense feature
     Xt = torch.tensor(ra.rand(n, m_den).astype(np.float32))
 
@@ -977,6 +993,7 @@ def generate_synthetic_input_batch(
     trace_file,
     enable_padding=False,
 ):
+    print('dlrm_data_pytorch.py/generate_synthetic_input_batch')
     # dense feature
     Xt = torch.tensor(ra.rand(n, m_den).astype(np.float32))
 
@@ -1043,6 +1060,7 @@ def generate_synthetic_input_batch(
 
 
 def generate_stack_distance(cumm_val, cumm_dist, max_i, i, enable_padding=False):
+    print('dlrm_data_pytorch.py/generate_stack_distance')
     u = ra.rand(1)
     if i < max_i:
         # only generate stack distances up to the number of new references seen so far
@@ -1066,6 +1084,7 @@ cache_line_size = 1
 def trace_generate_lru(
     line_accesses, list_sd, cumm_sd, out_trace_len, enable_padding=False
 ):
+    print('dlrm_data_pytorch.py/trace_generate_lru')
     max_sd = list_sd[-1]
     l = len(line_accesses)
     i = 0
@@ -1095,6 +1114,7 @@ def trace_generate_lru(
 def trace_generate_rand(
     line_accesses, list_sd, cumm_sd, out_trace_len, enable_padding=False
 ):
+    print('dlrm_data_pytorch.py/trace_generate_rand')
     max_sd = list_sd[-1]
     l = len(line_accesses)  # !!!Unique,
     i = 0
@@ -1117,6 +1137,7 @@ def trace_generate_rand(
 
 
 def trace_profile(trace, enable_padding=False):
+    print('dlrm_data_pytorch.py/trace_profile')
     # number of elements in the array (assuming 1D)
     # n = trace.size
 
@@ -1226,7 +1247,7 @@ def write_dist_to_file(file_path, unique_accesses, list_sd, cumm_sd):
 if __name__ == "__main__":
     import operator
     import argparse
-
+    print('dlrm_data_pytorch.py/__main__')
     ### parse arguments ###
     parser = argparse.ArgumentParser(description="Generate Synthetic Distributions")
     parser.add_argument("--trace-file", type=str, default="./input/trace.log")
