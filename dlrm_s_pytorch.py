@@ -405,6 +405,9 @@ class DLRM_Net(nn.Module):
 
     def apply_emb(self, lS_o, lS_i, emb_l, v_W_l):
         print('dlrm_s_pytorch.py/DLRM_NetClass/apply_emb')
+        print('|__emb_l: ', emb_l)
+        print('|__lS_o : ', lS_o)
+        print('|__lS_i : ', lS_i)
         # WARNING: notice that we are processing the batch at once. We implicitly
         # assume that the data is laid out such that:
         # 1. each embedding is indexed with a group of sparse indices,
